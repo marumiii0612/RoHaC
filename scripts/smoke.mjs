@@ -1,0 +1,17 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+const page=await browser.newPage({viewport:{width:1440,height:1100},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto(process.env.BASE_URL||'http://localhost:5173/RoHaC/');await page.getByRole('heading',{name:'横浜市'}).waitFor();await page.locator('.chart-bar').first().waitFor();
+assert.ok(await page.locator('.chart-bar').count()>10);await page.locator('.chart-bar').first().click();assert.match(await page.locator('.detail-card h3').innerText(),/年の議会選挙/);
+await page.locator('.chart-bar').last().click();await page.locator('.chart-bar').last().evaluate(el=>el.blur());await page.screenshot({path:'/workspace/artifacts/rohac-desktop.png',fullPage:true});
+await page.locator('#period').selectOption('2010');assert.ok(await page.locator('.chart-bar').count()<5);await page.locator('#period').selectOption('all');
+const dl=page.waitForEvent('download');await page.getByRole('button',{name:'CSVダウンロード'}).click();const download=await dl;await download.saveAs('/workspace/artifacts/yokohama.csv');assert.match(download.suggestedFilename(),/14100/);const csv=await readFile('/workspace/artifacts/yokohama.csv','utf8');assert.ok(csv.startsWith('\uFEFF'));assert.match(csv,/当選首長得票率/);assert.match(csv,/林 文子/);assert.match(csv,/無所属/);assert.equal(csv.trim().split('\r\n').length,34);
+await page.locator('#city-search').fill('札幌');await page.getByRole('option').filter({hasText:'01100'}).click();await page.getByRole('heading',{name:'札幌市'}).waitFor();assert.match(page.url(),/01100/);
+await page.getByRole('button',{name:'選挙データ一覧',exact:true}).click();assert.ok(await page.locator('tbody tr').count()>10);assert.ok((await page.locator('tbody').innerText()).includes('板垣'));
+await page.getByRole('button',{name:'データの読み方',exact:true}).click();await page.getByRole('heading',{name:'２つの選挙をつなぎ、地域の変化を知る。'}).waitFor();assert.equal(await page.locator('a[download]').count(),2);
+await page.getByRole('button',{name:'自治体を調べる',exact:true}).click();await page.locator('#city-search').fill('存在しない自治体');await page.getByText('該当する自治体がありません。').waitFor();await page.locator('#city-search').press('Escape');
+await page.locator('#city-search').fill('');await page.locator('#city-search').press('Escape');await page.waitForTimeout(3100);await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/workspace/artifacts/rohac-mobile.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+await page.locator('#city-search').click();await page.getByRole('button',{name:'メニューを開く'}).click();await page.getByRole('button',{name:'データの読み方',exact:true}).click();await page.getByRole('heading',{name:'２つの選挙をつなぎ、地域の変化を知る。'}).waitFor();
+assert.deepEqual(errors,[]);console.log('PASS: initial chart, election selection, period filter, CSV, city search, data table, sources, empty search, mobile layout/navigation; no browser errors');await browser.close();

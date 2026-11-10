@@ -1,0 +1,2 @@
+# Optional: re-import and verify original Excel files
+openpyxl==3.1.5
