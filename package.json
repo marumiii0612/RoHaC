@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node scripts/smoke.mjs",
-    "verify:data": "python scripts/verify_data.py"
+    "verify:data": "python scripts/verify_data.py",
+    "test:candidates": "node scripts/candidates.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-jp": "^5.3.1",
