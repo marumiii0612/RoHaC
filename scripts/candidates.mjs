@@ -11,7 +11,7 @@ try{
  assert.equal(await candidates.locator('.candidate-row').count(),3);
  for(const [name,votes,share] of [['林 文子','694,360','81.9%'],['柴田 豊勝','134,644','15.9%'],['矢野 未来歩','19,259','2.3%']]){
   const row=candidates.locator('.candidate-row').filter({hasText:name});
-  assert.equal(await row.locator('.candidate-votes').innerText(),votes);
+  assert.equal(await row.locator('.candidate-vote-value').innerText(),votes);
   assert.equal(await row.locator('.candidate-share strong').innerText(),share);
   assert.equal(await row.locator('.candidate-party').innerText(),'無所属');
  }
@@ -36,6 +36,6 @@ try{
  const missing=new URL(base);missing.searchParams.set('city','17385');await page.goto(missing.href);await page.locator('.city-title h2').waitFor();await page.getByRole('button',{name:'選挙データ一覧',exact:true}).click();
  const uncontested=page.locator('tbody>tr').filter({hasText:'1962.12.02'});await uncontested.locator('summary').click();
  assert.equal(await uncontested.locator('.candidate-share strong').innerText(),'—');assert.match(await uncontested.locator('.candidate-help').innerText(),/無投票/);
- const unknown=page.locator('tbody>tr').filter({hasText:'1970.11.01'});await unknown.locator('summary').click();assert.equal(await unknown.locator('.candidate-share strong').innerText(),'—');assert.equal(await unknown.locator('.candidate-votes').innerText(),'—');
+ const unknown=page.locator('tbody>tr').filter({hasText:'1970.11.01'});await unknown.locator('summary').click();assert.equal(await unknown.locator('.candidate-share strong').innerText(),'—');assert.equal(await unknown.locator('.candidate-vote-value').innerText(),'—');
  assert.deepEqual(errors,[]);console.log('PASS: all opponents, source vote counts/shares/parties, winner flag, historical detail expansion, snapshot changes, other-party names, uncontested/missing data, mobile layout; no browser errors');
 }finally{await browser.close()}
